@@ -6,9 +6,9 @@ import (
 	"os"
 	"sync"
 
-	"github.com/hvuhsg/lokidb/communication/grpc"
-	"github.com/hvuhsg/lokidb/communication/rest"
 	"github.com/lokidb/engine"
+	"github.com/lokidb/server/communication/grpc"
+	"github.com/lokidb/server/communication/rest"
 )
 
 var (

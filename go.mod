@@ -1,10 +1,9 @@
-module github.com/hvuhsg/lokidb
+module github.com/lokidb/server
 
 go 1.18
 
 require (
 	github.com/bitly/go-simplejson v0.5.0
-	github.com/chzyer/readline v1.5.1
 	github.com/golang/protobuf v1.5.2
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0

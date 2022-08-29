@@ -6,7 +6,7 @@ import (
 	"log"
 	"time"
 
-	pd "github.com/hvuhsg/lokidb/communication/grpc"
+	pd "github.com/lokidb/server/communication/grpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/types/known/emptypb"
