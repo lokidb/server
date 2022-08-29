@@ -11,7 +11,6 @@ LokiDB server
       - [Docker](#docker)
     - [Usage](#usage)
         - [server](#server)
-        - [cli](#cli)
     - [API](#api)
 
 
@@ -23,12 +22,8 @@ LokiDB server
 
 ### Installation
 #### Docker
-```
+```shell
 docker run -d -p 50051:50051 -p 8080:8080 --name lokidb yoyocode/lokidb
-```
-
-```
-docker run -it yoyocode/lokidb /lokidb-cli -addr <grpc_host>:<grpc_port>
 ```
 
 ### Usage
@@ -60,40 +55,6 @@ Usage of lokidb:
 $ lokidb -storage_dir data/
 2022/08/25 23:52:13 gRPC server listening at 127.0.0.1:50051
 2022/08/25 23:52:13 REST server listening at 127.0.0.1:8080
-```
-
-##### cli
-```shell
-$ lokidb-cil --help
-Usage of /tmp/go-build1997907887/b001/exe/main:
-  -addr string
-        the address to connect to (default "localhost:50051")
-```
-
-```shell
-$ lokidb-cli
->>> help
-commands:
-    get 
-    set 
-    del 
-    keys 
-    flush 
-    bye 
-    help 
-
->>> keys
-0) a
-1) b
-2) mom
-
->>> get asdlg
-
-
->>> get a
-vavava
-
->>> exit
 ```
 
 ### API  
