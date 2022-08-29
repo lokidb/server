@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+option go_package = "github.com/hvuhsg/lokidbServer/grpc";
+package lokidb;
+
+import "google/protobuf/empty.proto";
+
+message GetRequest {
+    string key = 1;
+}
+
+message GetResponse {
+    string value = 1;
+}
+
+message SetRequest {
+    string key = 1;
+    string value = 2;
+}
+
+message DelRequest {
+    string key = 1;
+}
+
+message DelResponse {
+    bool deleted = 1;
+}
+
+message KeysResponse {
+    repeated string keys = 1;
+}
+
+service LokiDBService {
+    // Delete key
+    rpc Del(DelRequest) returns (DelResponse) {}
+
+    // Flush all keys
+    rpc Flush(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+    // Get value by key
+    rpc Get(GetRequest) returns (GetResponse) {}
+
+    // Get list of all keys
+    rpc Keys(google.protobuf.Empty) returns (KeysResponse) {}
+
+    // Set key-value
+    rpc Set(SetRequest) returns (google.protobuf.Empty) {}
+}

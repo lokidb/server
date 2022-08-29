@@ -1,0 +1,136 @@
+openapi: 3.0.0
+info:
+  description: "API spec for the lokidb server."
+  version: 0.0.1
+  title: LokiDB
+  contact:
+    email: support@lokidb.io
+servers:
+  - url: http://127.0.0.1:8080
+  
+paths:
+  /get:
+    get:
+      summary: Get value by key
+      operationId: GET
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  value:
+                    type: string
+                    format: base64
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /set:
+    post:
+      summary: Set key-value
+      operationId: SET
+      requestBody:
+        content:
+           application/json:
+              schema:
+                type: object
+                properties:
+                  key:
+                    type: string
+                  value:
+                    type: string
+                    format: base64
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /del:
+    delete:
+      summary: Delete key
+      operationId: DEL
+      parameters:
+        - name: key
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted:
+                    type: boolean
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /keys:
+    get:
+      summary: Get list of all keys
+      operationId: KEYS
+      responses:
+        "200":
+          description: successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  keys:
+                    type: array
+                    items:
+                      type: string
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+  /flush:
+    delete:
+      summary: Flush all keys
+      operationId: FLUSH
+      responses:
+        "200":
+          description: successful operation
