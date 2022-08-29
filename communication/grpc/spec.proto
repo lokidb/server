@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option go_package = "github.com/hvuhsg/lokidbServer/grpc";
+option go_package = "github.com/lokidb/server/grpc";
 package lokidb;
 
 import "google/protobuf/empty.proto";
