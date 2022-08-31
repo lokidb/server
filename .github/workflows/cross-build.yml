@@ -2,9 +2,9 @@ name: Cross-build
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   pull_request:
-    branches: [main]
+    branches: [master]
 
 jobs:
   xgo:
@@ -18,7 +18,7 @@ jobs:
         with:
           xgo_version: latest
           go_version: 1.18
-          pkg: cmd/lokidb
+          pkg: cmd/server
           dest: dist
           prefix: lokidb
           targets: windows/amd64,linux/amd64,linux/arm64,darwin/arm64
