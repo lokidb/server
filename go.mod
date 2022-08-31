@@ -7,7 +7,7 @@ require (
 	github.com/golang/protobuf v1.5.2
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
-	github.com/lokidb/engine v0.0.0-20220829163745-7bf8080ef66a
+	github.com/lokidb/engine v0.0.0-20220830214223-2556cdc39b8f
 	google.golang.org/grpc v1.49.0
 	google.golang.org/protobuf v1.28.1
 )
