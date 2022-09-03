@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+option go_package = "github.com/lokidb/server/p2p";
+package lokidb;
+
+import "google/protobuf/empty.proto";
+
+message stateMessage{
+    string id = 1;
+    string name = 2;
+    string payload = 3;
+    int64 created = 4;
+    int64 maxLife = 5;
+    repeated string signatures = 20;
+}
+
+message GetStateResponse {
+    repeated stateMessage messages = 1;
+}
+
+message NewPeerRequest{
+    string host = 1;
+    int32 port = 2; 
+}
+
+service P2PService {
+    // Get State
+    rpc GetState(google.protobuf.Empty) returns (GetStateResponse) {}
+
+    // Notify about new peer
+    rpc NewPeer(NewPeerRequest) returns (google.protobuf.Empty) {}
+}

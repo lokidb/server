@@ -5,6 +5,7 @@ go 1.18
 require (
 	github.com/bitly/go-simplejson v0.5.0
 	github.com/golang/protobuf v1.5.2
+	github.com/google/uuid v1.3.0
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/lokidb/engine v0.0.0-20220830214223-2556cdc39b8f
