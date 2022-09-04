@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"log"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 // Client timeout in seconds
@@ -16,7 +14,7 @@ type Node interface {
 	Shutdown()
 	SendMessage(message)
 	OnMessage(msgName string, handler func(payload string))
-	GetState() State
+	getState() State
 }
 
 type Address struct {
@@ -25,9 +23,7 @@ type Address struct {
 }
 
 type p2pNode struct {
-	uuid          string
-	peers         []Address
-	clients       []*Client
+	peers         map[Address]Client
 	state         State
 	handlers      map[string]func(string)
 	heartbeatRate time.Duration
@@ -36,21 +32,22 @@ type p2pNode struct {
 	server        *nodeServer
 }
 
-func NewNode(peers []Address, heartbeatRate time.Duration) Node {
+func NewNode(peersAddress []Address, heartbeatRate time.Duration) Node {
 	n := new(p2pNode)
-	n.uuid = uuid.New().String()
-	n.peers = peers
-	n.clients = make([]*Client, 0, len(peers))
+	n.peers = make(map[Address]Client, len(peersAddress))
+
+	// Create clients from peers address
+	for _, peer := range peersAddress {
+		client := newClient(fmt.Sprintf("%s:%d", peer.Host, peer.Port), time.Duration(time.Second*timeout))
+		n.peers[peer] = *client
+	}
+
+	n.server = newServer(n, "0.0.0.0", 11497)
 	n.handlers = make(map[string]func(string), 20)
 	n.state = newState()
+
 	n.stop = false
 	n.stopChan = make(chan struct{})
-	n.server = newServer(n, "0.0.0.0", 11497)
-
-	for _, peer := range peers {
-		client := newClient(fmt.Sprintf("%s:%d", peer.Host, peer.Port), time.Duration(time.Second*timeout))
-		n.clients = append(n.clients, client)
-	}
 
 	return n
 }
@@ -58,11 +55,12 @@ func NewNode(peers []Address, heartbeatRate time.Duration) Node {
 func (n *p2pNode) Run() {
 	defer close(n.stopChan)
 
+	// Run until shutdown
 	for !n.stop {
 		time.Sleep(n.heartbeatRate)
 
 		// get peers state and merge to self state
-		for _, client := range n.clients {
+		for _, client := range n.peers {
 			clientState, err := client.GetState()
 			if err != nil {
 				log.Println(err.Error())
@@ -72,22 +70,16 @@ func (n *p2pNode) Run() {
 			n.state = n.state.merge(clientState)
 		}
 
-		// sign on state
-		n.state.sign(n.uuid)
-
 		// notify handlers
 		for _, msg := range n.state.messages {
-			if msg.handled {
-				continue
-			}
-
-			if len(msg.signaturs) == len(n.peers) {
+			if !msg.isActive() {
 				handler, ok := n.handlers[msg.name]
 
 				if ok {
 					handler(msg.payload)
-					msg.handled = true
 				}
+
+				delete(n.state.messages, msg.id)
 			}
 		}
 	}
@@ -106,6 +98,6 @@ func (n *p2pNode) OnMessage(msgName string, handler func(payload string)) {
 	n.handlers[msgName] = handler
 }
 
-func (n *p2pNode) GetState() State {
+func (n *p2pNode) getState() State {
 	return n.state
 }

@@ -11,11 +11,10 @@ message stateMessage{
     string payload = 3;
     int64 created = 4;
     int64 maxLife = 5;
-    repeated string signatures = 20;
 }
 
 message GetStateResponse {
-    repeated stateMessage messages = 1;
+    map<string, stateMessage> messages = 1;
 }
 
 message NewPeerRequest{

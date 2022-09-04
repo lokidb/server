@@ -16,10 +16,6 @@ func TestMessageCreation(t *testing.T) {
 	if !msg.isActive() {
 		t.Error("expecting message to be active")
 	}
-
-	if len(msg.signaturs) != 0 {
-		t.Error("expecting 0 signatures on message")
-	}
 }
 
 func TestMerge(t *testing.T) {

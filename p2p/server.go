@@ -45,12 +45,12 @@ func (s *nodeServer) Run() {
 }
 
 func (s *nodeServer) GetState(ctx context.Context, in *emptypb.Empty) (*GetStateResponse, error) {
-	state := s.p2pNode.GetState()
+	state := s.p2pNode.getState()
 	messages := state.messages
-	stateMessages := make([]*StateMessage, len(messages))
+	stateMessages := make(map[string]*StateMessage, len(messages))
 
-	for i, msg := range messages {
-		stateMessages[i] = &StateMessage{Id: msg.id, Name: msg.name, Payload: msg.payload, Created: msg.created.Unix(), MaxLife: int64(msg.maxLife.Seconds()), Signatures: msg.signaturs}
+	for _, msg := range messages {
+		stateMessages[msg.id] = &StateMessage{Id: msg.id, Name: msg.name, Payload: msg.payload, Created: msg.created.Unix(), MaxLife: int64(msg.maxLife.Seconds())}
 	}
 
 	return &GetStateResponse{Messages: stateMessages}, nil

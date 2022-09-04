@@ -50,12 +50,11 @@ func (c *Client) GetState() (State, error) {
 
 	for _, stateMsg := range res.GetMessages() {
 		msg := message{
-			id:        stateMsg.Id,
-			name:      stateMsg.Name,
-			payload:   stateMsg.Payload,
-			created:   time.Unix(stateMsg.Created, 0),
-			maxLife:   time.Duration(stateMsg.MaxLife * int64(time.Second)),
-			signaturs: stateMsg.Signatures,
+			id:      stateMsg.Id,
+			name:    stateMsg.Name,
+			payload: stateMsg.Payload,
+			created: time.Unix(stateMsg.Created, 0),
+			maxLife: time.Duration(stateMsg.MaxLife * int64(time.Second)),
 		}
 		s.AddMessage(msg)
 	}
