@@ -20,7 +20,7 @@ func newClient(addr string, timeout time.Duration) *Client {
 	// Set up a connection to the server.
 	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		log.Fatalf("did not connect: %v", err)
+		log.Printf("did not connect: %v\n", err)
 	}
 
 	client := new(Client)

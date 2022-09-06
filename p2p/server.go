@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"time"
 
 	grpclib "google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -38,7 +37,7 @@ func (s *nodeServer) Run() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	log.Printf("gRPC server listening at %v", lis.Addr())
+	log.Printf("P2P node listening at %v", lis.Addr())
 	if err := s.grpcServer.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
@@ -54,12 +53,4 @@ func (s *nodeServer) GetState(ctx context.Context, in *emptypb.Empty) (*GetState
 	}
 
 	return &GetStateResponse{Messages: stateMessages}, nil
-}
-
-func (s *nodeServer) NewPeer(ctx context.Context, in *NewPeerRequest) (*emptypb.Empty, error) {
-	// Create new peer message and give it 3 minutes to be compleated
-	msg := NewMessage(fmt.Sprintf("new-peer %s:%d", in.GetHost(), in.GetPort()), "new-peer", fmt.Sprintf("%s:%d", in.GetHost(), in.GetPort()), time.Minute*3)
-	s.p2pNode.SendMessage(msg)
-
-	return &emptypb.Empty{}, nil
 }

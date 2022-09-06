@@ -32,28 +32,34 @@ type p2pNode struct {
 	server        *nodeServer
 }
 
-func NewNode(peersAddress []Address, heartbeatRate time.Duration) Node {
+func NewNode(peersAddress []Address, heartbeatRate time.Duration, port int) Node {
 	n := new(p2pNode)
 	n.peers = make(map[Address]Client, len(peersAddress))
 
 	// Create clients from peers address
-	for _, peer := range peersAddress {
-		client := newClient(fmt.Sprintf("%s:%d", peer.Host, peer.Port), time.Duration(time.Second*timeout))
-		n.peers[peer] = *client
+	for _, address := range peersAddress {
+		client := newClient(fmt.Sprintf("%s:%d", address.Host, address.Port), time.Duration(time.Second*timeout))
+		n.peers[address] = *client
+		log.Printf("peer added %d\n", address.Port)
 	}
 
-	n.server = newServer(n, "0.0.0.0", 11497)
+	n.server = newServer(n, "0.0.0.0", port)
 	n.handlers = make(map[string]func(string), 20)
 	n.state = newState()
 
+	n.heartbeatRate = heartbeatRate
 	n.stop = false
 	n.stopChan = make(chan struct{})
 
 	return n
 }
 
+// Run node main loop.
 func (n *p2pNode) Run() {
 	defer close(n.stopChan)
+
+	// Run server
+	go n.server.Run()
 
 	// Run until shutdown
 	for !n.stop {
@@ -63,10 +69,10 @@ func (n *p2pNode) Run() {
 		for _, client := range n.peers {
 			clientState, err := client.GetState()
 			if err != nil {
-				log.Println(err.Error())
 				continue
 			}
 
+			log.Println("Merging state from peer")
 			n.state = n.state.merge(clientState)
 		}
 

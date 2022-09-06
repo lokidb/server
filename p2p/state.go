@@ -60,7 +60,9 @@ type State struct {
 }
 
 func newState() State {
-	return State{}
+	s := new(State)
+	s.messages = make(map[string]message)
+	return *s
 }
 
 func (s *State) merge(other State) State {

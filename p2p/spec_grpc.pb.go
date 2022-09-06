@@ -25,8 +25,6 @@ const _ = grpc.SupportPackageIsVersion7
 type P2PServiceClient interface {
 	// Get State
 	GetState(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*GetStateResponse, error)
-	// Notify about new peer
-	NewPeer(ctx context.Context, in *NewPeerRequest, opts ...grpc.CallOption) (*empty.Empty, error)
 }
 
 type p2PServiceClient struct {
@@ -46,23 +44,12 @@ func (c *p2PServiceClient) GetState(ctx context.Context, in *empty.Empty, opts .
 	return out, nil
 }
 
-func (c *p2PServiceClient) NewPeer(ctx context.Context, in *NewPeerRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
-	out := new(empty.Empty)
-	err := c.cc.Invoke(ctx, "/lokidb.P2PService/NewPeer", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // P2PServiceServer is the server API for P2PService service.
 // All implementations must embed UnimplementedP2PServiceServer
 // for forward compatibility
 type P2PServiceServer interface {
 	// Get State
 	GetState(context.Context, *empty.Empty) (*GetStateResponse, error)
-	// Notify about new peer
-	NewPeer(context.Context, *NewPeerRequest) (*empty.Empty, error)
 	mustEmbedUnimplementedP2PServiceServer()
 }
 
@@ -72,9 +59,6 @@ type UnimplementedP2PServiceServer struct {
 
 func (UnimplementedP2PServiceServer) GetState(context.Context, *empty.Empty) (*GetStateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetState not implemented")
-}
-func (UnimplementedP2PServiceServer) NewPeer(context.Context, *NewPeerRequest) (*empty.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method NewPeer not implemented")
 }
 func (UnimplementedP2PServiceServer) mustEmbedUnimplementedP2PServiceServer() {}
 
@@ -107,24 +91,6 @@ func _P2PService_GetState_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
-func _P2PService_NewPeer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(NewPeerRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(P2PServiceServer).NewPeer(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/lokidb.P2PService/NewPeer",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(P2PServiceServer).NewPeer(ctx, req.(*NewPeerRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // P2PService_ServiceDesc is the grpc.ServiceDesc for P2PService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -135,10 +101,6 @@ var P2PService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetState",
 			Handler:    _P2PService_GetState_Handler,
-		},
-		{
-			MethodName: "NewPeer",
-			Handler:    _P2PService_NewPeer_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

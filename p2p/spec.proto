@@ -17,15 +17,7 @@ message GetStateResponse {
     map<string, stateMessage> messages = 1;
 }
 
-message NewPeerRequest{
-    string host = 1;
-    int32 port = 2; 
-}
-
 service P2PService {
     // Get State
     rpc GetState(google.protobuf.Empty) returns (GetStateResponse) {}
-
-    // Notify about new peer
-    rpc NewPeer(NewPeerRequest) returns (google.protobuf.Empty) {}
 }
