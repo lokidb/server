@@ -93,6 +93,7 @@ func (n *p2pNode) Run() {
 
 func (n *p2pNode) Shutdown() {
 	n.stop = true
+	n.server.Stop()
 	<-n.stopChan
 }
 

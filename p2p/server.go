@@ -43,6 +43,10 @@ func (s *nodeServer) Run() {
 	}
 }
 
+func (s *nodeServer) Stop() {
+	s.grpcServer.Stop()
+}
+
 func (s *nodeServer) GetState(ctx context.Context, in *emptypb.Empty) (*GetStateResponse, error) {
 	state := s.p2pNode.getState()
 	messages := state.messages
