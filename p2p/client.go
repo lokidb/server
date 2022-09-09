@@ -50,7 +50,7 @@ func (c *Client) GetState() (state.State, error) {
 	s := state.New()
 
 	for _, item := range res.GetStateItems() {
-		s.Update(item.GetName(), item.GetKey(), item.GetValue(), time.Duration(item.GetInActiveDuration()))
+		s.Update(item.GetKey(), item.GetValue(), time.Duration(item.GetInActiveDuration()))
 	}
 
 	return s, nil

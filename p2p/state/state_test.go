@@ -9,12 +9,12 @@ func TestMergeSameID(t *testing.T) {
 	s1 := New()
 	s2 := New()
 
-	s1.Update("id", "name", "first", time.Second)
-	s2.Update("id", "name", "second", time.Second)
+	s1.Update("name", "first", time.Second)
+	s2.Update("name", "second", time.Second)
 
 	s1.Merge(s2)
 
-	items := s1.GetItemsByName("name")
+	items := s1.Items()
 
 	if items[0].Value != "second" {
 		t.Error("expecting item payload to be 'second'")
@@ -25,8 +25,8 @@ func TestMergeDiffID(t *testing.T) {
 	s1 := New()
 	s2 := New()
 
-	s1.Update("id1", "name", "first", time.Second)
-	s2.Update("id2", "name", "second", time.Second)
+	s1.Update("name1", "first", time.Second)
+	s2.Update("name2", "second", time.Second)
 
 	s1.Merge(s2)
 
@@ -39,13 +39,13 @@ func TestMergeTrippleID(t *testing.T) {
 	s1 := New()
 	s2 := New()
 
-	s1.Update("id", "name", "first", time.Second)
-	s2.Update("id", "name", "second", time.Second)
-	s1.Update("id", "name", "third", time.Second)
+	s1.Update("name", "first", time.Second)
+	s2.Update("name", "second", time.Second)
+	s1.Update("name", "third", time.Second)
 
 	s1.Merge(s2)
 
-	items := s1.GetItemsByName("name")
+	items := s1.Items()
 
 	if items[0].Value != "third" {
 		t.Error("expecting item payload to be 'third'")
@@ -56,11 +56,11 @@ func TestMergeSameAndDiff(t *testing.T) {
 	s1 := New()
 	s2 := New()
 
-	s1.Update("id", "name", "first", time.Second)
-	s2.Update("id", "name", "second", time.Second)
+	s1.Update("name", "first", time.Second)
+	s2.Update("name", "second", time.Second)
 
-	s1.Update("id1", "name", "bla", time.Second)
-	s2.Update("id2", "name", "alb", time.Second)
+	s1.Update("name1", "bla", time.Second)
+	s2.Update("name2", "alb", time.Second)
 
 	s1.Merge(s2)
 

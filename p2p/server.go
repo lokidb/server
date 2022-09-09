@@ -59,7 +59,7 @@ func (s *nodeServer) GetState(ctx context.Context, in *emptypb.Empty) (*GetState
 			panic("cant convert value to any")
 		}
 
-		stateItems[i] = &StateItem{Name: item.Name, Key: item.Key, Value: &iv, LastUpdate: item.LastUpdate.UnixMilli(), InActiveDuration: int64(item.InactiveDuration)}
+		stateItems[i] = &StateItem{Key: item.Key, Value: &iv, LastUpdate: item.LastUpdate.UnixMilli(), InActiveDuration: int64(item.InactiveDuration)}
 	}
 
 	return &GetStateResponse{StateItems: stateItems}, nil

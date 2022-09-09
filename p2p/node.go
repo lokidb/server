@@ -3,6 +3,7 @@ package p2p
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/lokidb/server/p2p/state"
@@ -10,11 +11,12 @@ import (
 
 // Client timeout in seconds
 const timeout = 20
+const internalKeyPrefix = "$"
 
 type Node interface {
 	Run()
 	Shutdown()
-	UpdateState(key string, value any)
+	UpdateState(key string, value any) error
 	OnKeyChange(string, func(any))
 	getState() state.State
 }
@@ -28,7 +30,8 @@ type p2pNode struct {
 	clients       map[Address]Client
 	heartbeatRate time.Duration
 	state         state.State
-	handlers      map[string]map[string]func(any)
+	handlers      map[string]func(any)
+	handledItems  map[string]state.Item
 	server        *nodeServer
 	stop          bool
 	stopChan      chan struct{}
@@ -39,7 +42,7 @@ func NewNode(peersAddress []Address, heartbeatRate time.Duration, port int) Node
 	n.heartbeatRate = heartbeatRate
 	n.stop = false
 	n.stopChan = make(chan struct{})
-	n.handlers = make(map[string]map[string]func(any))
+	n.handlers = make(map[string]func(any))
 
 	// Create clients from peers address
 	n.clients = make(map[Address]Client, len(peersAddress))
@@ -52,7 +55,7 @@ func NewNode(peersAddress []Address, heartbeatRate time.Duration, port int) Node
 	n.server = newServer(n, "0.0.0.0", port)
 
 	n.state = state.New()
-	n.state.Update("internal", "peers", peersAddress, n.heartbeatRate*3)
+	n.state.Update("$peers", peersAddress, n.heartbeatRate*3)
 
 	return n
 }
@@ -78,6 +81,20 @@ func (n *p2pNode) Run() {
 			log.Println("Merging state from peer")
 			n.state.Merge(clientState)
 		}
+
+		for _, activeItem := range n.state.ActiveItems() {
+			currentItem, ok := n.handledItems[activeItem.UID()]
+			if ok && currentItem.Value == activeItem.Value {
+				continue
+			}
+
+			n.handledItems[activeItem.UID()] = activeItem
+
+			handler, ok := n.handlers[activeItem.Key]
+			if ok {
+				handler(activeItem.Value)
+			}
+		}
 	}
 }
 
@@ -87,16 +104,22 @@ func (n *p2pNode) Shutdown() {
 	<-n.stopChan
 }
 
-func (n *p2pNode) addHandler(name string, key string, handler func(any)) {
-	n.handlers[name][key] = handler
+func (n *p2pNode) addHandler(key string, handler func(any)) {
+	n.handlers[key] = handler
 }
 
 func (n *p2pNode) OnKeyChange(key string, handler func(any)) {
-	n.addHandler("exteranl", key, handler)
+	n.addHandler(key, handler)
 }
 
-func (n *p2pNode) UpdateState(key string, value any) {
-	n.state.Update("external", key, value, n.heartbeatRate*3)
+func (n *p2pNode) UpdateState(key string, value any) error {
+	if strings.HasPrefix(key, internalKeyPrefix) {
+		return fmt.Errorf("can't have key with prefix '%s' it reserved for internal node use", internalKeyPrefix)
+	}
+
+	n.state.Update(key, value, n.heartbeatRate*3)
+
+	return nil
 }
 
 func (n *p2pNode) getState() state.State {
