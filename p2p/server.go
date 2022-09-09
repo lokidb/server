@@ -7,6 +7,7 @@ import (
 	"net"
 
 	grpclib "google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -49,12 +50,17 @@ func (s *nodeServer) Stop() {
 
 func (s *nodeServer) GetState(ctx context.Context, in *emptypb.Empty) (*GetStateResponse, error) {
 	state := s.p2pNode.getState()
-	messages := state.messages
-	stateMessages := make(map[string]*StateMessage, len(messages))
+	items := state.Items()
+	stateItems := make([]*StateItem, len(items))
 
-	for _, msg := range messages {
-		stateMessages[msg.id] = &StateMessage{Id: msg.id, Name: msg.name, Payload: msg.payload, Created: msg.created.Unix(), MaxLife: int64(msg.maxLife.Seconds())}
+	for i, item := range items {
+		iv, ok := item.Value.(anypb.Any)
+		if !ok {
+			panic("cant convert value to any")
+		}
+
+		stateItems[i] = &StateItem{Name: item.Name, Key: item.Key, Value: &iv, LastUpdate: item.LastUpdate.UnixMilli(), InActiveDuration: int64(item.InactiveDuration)}
 	}
 
-	return &GetStateResponse{Messages: stateMessages}, nil
+	return &GetStateResponse{StateItems: stateItems}, nil
 }

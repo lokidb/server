@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/lokidb/server/p2p/state"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -35,7 +36,7 @@ func (c *Client) Close() {
 	c.grpcConn.Close()
 }
 
-func (c *Client) GetState() (State, error) {
+func (c *Client) GetState() (state.State, error) {
 	// Contact the server and print out its response.
 	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
 	defer cancel()
@@ -43,20 +44,13 @@ func (c *Client) GetState() (State, error) {
 	res, err := c.grpcClient.GetState(ctx, &emptypb.Empty{})
 
 	if err != nil {
-		return State{}, err
+		return state.State{}, err
 	}
 
-	s := newState()
+	s := state.New()
 
-	for _, stateMsg := range res.GetMessages() {
-		msg := message{
-			id:      stateMsg.Id,
-			name:    stateMsg.Name,
-			payload: stateMsg.Payload,
-			created: time.Unix(stateMsg.Created, 0),
-			maxLife: time.Duration(stateMsg.MaxLife * int64(time.Second)),
-		}
-		s.AddMessage(msg)
+	for _, item := range res.GetStateItems() {
+		s.Update(item.GetName(), item.GetKey(), item.GetValue(), time.Duration(item.GetInActiveDuration()))
 	}
 
 	return s, nil

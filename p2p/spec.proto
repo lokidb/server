@@ -4,17 +4,18 @@ option go_package = "github.com/lokidb/server/p2p";
 package lokidb;
 
 import "google/protobuf/empty.proto";
+import "google/protobuf/any.proto";
 
-message stateMessage{
-    string id = 1;
-    string name = 2;
-    string payload = 3;
-    int64 created = 4;
-    int64 maxLife = 5;
+message stateItem{
+    string name = 1;
+    string key = 2;
+    google.protobuf.Any value = 3;
+    int64 lastUpdate = 4;
+    int64 inActiveDuration = 5;
 }
 
 message GetStateResponse {
-    map<string, stateMessage> messages = 1;
+    repeated stateItem stateItems = 1;
 }
 
 service P2PService {

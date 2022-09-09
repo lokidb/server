@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"time"
+
+	"github.com/lokidb/server/p2p/state"
 )
 
 // Client timeout in seconds
@@ -12,9 +14,9 @@ const timeout = 20
 type Node interface {
 	Run()
 	Shutdown()
-	SendMessage(message)
-	OnMessage(msgName string, handler func(payload string))
-	getState() State
+	UpdateState(key string, value any)
+	OnKeyChange(string, func(any))
+	getState() state.State
 }
 
 type Address struct {
@@ -23,33 +25,34 @@ type Address struct {
 }
 
 type p2pNode struct {
-	peers         map[Address]Client
-	state         State
-	handlers      map[string]func(string)
+	clients       map[Address]Client
 	heartbeatRate time.Duration
+	state         state.State
+	handlers      map[string]map[string]func(any)
+	server        *nodeServer
 	stop          bool
 	stopChan      chan struct{}
-	server        *nodeServer
 }
 
 func NewNode(peersAddress []Address, heartbeatRate time.Duration, port int) Node {
 	n := new(p2pNode)
-	n.peers = make(map[Address]Client, len(peersAddress))
+	n.heartbeatRate = heartbeatRate
+	n.stop = false
+	n.stopChan = make(chan struct{})
+	n.handlers = make(map[string]map[string]func(any))
 
 	// Create clients from peers address
+	n.clients = make(map[Address]Client, len(peersAddress))
 	for _, address := range peersAddress {
 		client := newClient(fmt.Sprintf("%s:%d", address.Host, address.Port), time.Duration(time.Second*timeout))
-		n.peers[address] = *client
+		n.clients[address] = *client
 		log.Printf("peer added %d\n", address.Port)
 	}
 
 	n.server = newServer(n, "0.0.0.0", port)
-	n.handlers = make(map[string]func(string), 20)
-	n.state = newState()
 
-	n.heartbeatRate = heartbeatRate
-	n.stop = false
-	n.stopChan = make(chan struct{})
+	n.state = state.New()
+	n.state.Update("internal", "peers", peersAddress, n.heartbeatRate*3)
 
 	return n
 }
@@ -66,27 +69,14 @@ func (n *p2pNode) Run() {
 		time.Sleep(n.heartbeatRate)
 
 		// get peers state and merge to self state
-		for _, client := range n.peers {
+		for _, client := range n.clients {
 			clientState, err := client.GetState()
 			if err != nil {
 				continue
 			}
 
 			log.Println("Merging state from peer")
-			n.state = n.state.merge(clientState)
-		}
-
-		// notify handlers
-		for _, msg := range n.state.messages {
-			if !msg.isActive() {
-				handler, ok := n.handlers[msg.name]
-
-				if ok {
-					handler(msg.payload)
-				}
-
-				delete(n.state.messages, msg.id)
-			}
+			n.state.Merge(clientState)
 		}
 	}
 }
@@ -97,14 +87,18 @@ func (n *p2pNode) Shutdown() {
 	<-n.stopChan
 }
 
-func (n *p2pNode) SendMessage(msg message) {
-	n.state.AddMessage(msg)
+func (n *p2pNode) addHandler(name string, key string, handler func(any)) {
+	n.handlers[name][key] = handler
 }
 
-func (n *p2pNode) OnMessage(msgName string, handler func(payload string)) {
-	n.handlers[msgName] = handler
+func (n *p2pNode) OnKeyChange(key string, handler func(any)) {
+	n.addHandler("exteranl", key, handler)
 }
 
-func (n *p2pNode) getState() State {
+func (n *p2pNode) UpdateState(key string, value any) {
+	n.state.Update("external", key, value, n.heartbeatRate*3)
+}
+
+func (n *p2pNode) getState() state.State {
 	return n.state
 }
