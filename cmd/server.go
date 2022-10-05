@@ -7,8 +7,8 @@ import (
 	"sync"
 
 	"github.com/lokidb/engine"
-	"github.com/lokidb/server/communication/grpc"
-	"github.com/lokidb/server/communication/rest"
+	"github.com/lokidb/server/pkg/communication/grpc"
+	"github.com/lokidb/server/pkg/communication/rest"
 )
 
 var (
