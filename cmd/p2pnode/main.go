@@ -19,10 +19,13 @@ func main() {
 	}
 	node := p2p.NewNode(BootstrapPeers, time.Second*2, *port)
 
-	node.SendMessage(p2p.NewMessage(fmt.Sprintf("hello-from-%d", *port), "hello-world", fmt.Sprintf("hello %d", *bootstarp), time.Second*10))
+	node.UpdateState("data", fmt.Sprintf("dddataaa %d", *port))
 
-	node.OnMessage("hello-world", func(payload string) {
-		fmt.Println(payload)
+	node.OnKeyChange("data", func(value string) {
+		fmt.Println(value)
+	})
+	node.OnKeyChange("$peers", func(value string) {
+		fmt.Println(value)
 	})
 
 	node.Run()

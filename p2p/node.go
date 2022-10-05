@@ -16,8 +16,8 @@ const internalKeyPrefix = "$"
 type Node interface {
 	Run()
 	Shutdown()
-	UpdateState(key string, value any) error
-	OnKeyChange(string, func(any))
+	UpdateState(key string, value string) error
+	OnKeyChange(string, func(string))
 	getState() state.State
 }
 
@@ -30,7 +30,7 @@ type p2pNode struct {
 	clients       map[Address]Client
 	heartbeatRate time.Duration
 	state         state.State
-	handlers      map[string]func(any)
+	handlers      map[string]func(string)
 	handledItems  map[string]state.Item
 	server        *nodeServer
 	stop          bool
@@ -39,10 +39,13 @@ type p2pNode struct {
 
 func NewNode(peersAddress []Address, heartbeatRate time.Duration, port int) Node {
 	n := new(p2pNode)
+	n.handledItems = make(map[string]state.Item, 1000)
 	n.heartbeatRate = heartbeatRate
 	n.stop = false
 	n.stopChan = make(chan struct{})
-	n.handlers = make(map[string]func(any))
+	n.handlers = make(map[string]func(string))
+	n.server = newServer(n, "0.0.0.0", port)
+	n.state = state.New()
 
 	// Create clients from peers address
 	n.clients = make(map[Address]Client, len(peersAddress))
@@ -51,11 +54,6 @@ func NewNode(peersAddress []Address, heartbeatRate time.Duration, port int) Node
 		n.clients[address] = *client
 		log.Printf("peer added %d\n", address.Port)
 	}
-
-	n.server = newServer(n, "0.0.0.0", port)
-
-	n.state = state.New()
-	n.state.Update("$peers", peersAddress, n.heartbeatRate*3)
 
 	return n
 }
@@ -104,15 +102,11 @@ func (n *p2pNode) Shutdown() {
 	<-n.stopChan
 }
 
-func (n *p2pNode) addHandler(key string, handler func(any)) {
+func (n *p2pNode) OnKeyChange(key string, handler func(string)) {
 	n.handlers[key] = handler
 }
 
-func (n *p2pNode) OnKeyChange(key string, handler func(any)) {
-	n.addHandler(key, handler)
-}
-
-func (n *p2pNode) UpdateState(key string, value any) error {
+func (n *p2pNode) UpdateState(key string, value string) error {
 	if strings.HasPrefix(key, internalKeyPrefix) {
 		return fmt.Errorf("can't have key with prefix '%s' it reserved for internal node use", internalKeyPrefix)
 	}

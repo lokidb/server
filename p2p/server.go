@@ -7,7 +7,6 @@ import (
 	"net"
 
 	grpclib "google.golang.org/grpc"
-	"google.golang.org/protobuf/types/known/anypb"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -54,12 +53,7 @@ func (s *nodeServer) GetState(ctx context.Context, in *emptypb.Empty) (*GetState
 	stateItems := make([]*StateItem, len(items))
 
 	for i, item := range items {
-		iv, ok := item.Value.(anypb.Any)
-		if !ok {
-			panic("cant convert value to any")
-		}
-
-		stateItems[i] = &StateItem{Key: item.Key, Value: &iv, LastUpdate: item.LastUpdate.UnixMilli(), InActiveDuration: int64(item.InactiveDuration)}
+		stateItems[i] = &StateItem{Key: item.Key, Value: item.Value, LastUpdate: item.LastUpdate.UnixMilli(), InActiveDuration: int64(item.InactiveDuration)}
 	}
 
 	return &GetStateResponse{StateItems: stateItems}, nil

@@ -1,6 +1,8 @@
 package state
 
-import "time"
+import (
+	"time"
+)
 
 type State struct {
 	items map[string]Item
@@ -25,9 +27,18 @@ func (s *State) Merge(other State) {
 	}
 }
 
-func (s *State) Update(key string, value any, inactiveDuration time.Duration) {
+func (s *State) Update(key string, value string, inactiveDuration time.Duration) {
 	i := newItem(key, value, inactiveDuration)
 	s.items[i.UID()] = i
+}
+
+func (s *State) Get(key string) string {
+	val, ok := s.items[key]
+	if !ok {
+		return ""
+	}
+
+	return val.Value
 }
 
 func (s *State) Items() []Item {
