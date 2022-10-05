@@ -28,8 +28,3 @@ func (c *change) getValue() []byte {
 func (c *change) getOpration() string {
 	return c.operation
 }
-
-func (c *change) revert() ichange {
-	// TODO: implement
-	return c
-}

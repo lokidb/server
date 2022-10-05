@@ -5,14 +5,12 @@ import "time"
 type appendOnlyLog interface {
 	append(ichange)
 	getAll() []ichange
-	getFrom(time.Time) []ichange
 }
 
 type ichange interface {
 	getOpration() string
 	getKey() string
 	getValue() []byte
-	revert() ichange
 	createdAt() time.Time
 }
 
