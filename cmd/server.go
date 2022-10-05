@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"flag"
@@ -7,8 +7,8 @@ import (
 	"sync"
 
 	"github.com/lokidb/engine"
-	"github.com/lokidb/server/communication/grpc"
-	"github.com/lokidb/server/communication/rest"
+	"github.com/lokidb/server/pkg/communication/grpc"
+	"github.com/lokidb/server/pkg/communication/rest"
 )
 
 var (
@@ -25,7 +25,7 @@ var (
 	run_grpc  = flag.Bool("run_grpc", true, "Serve gRPC API")
 )
 
-func main() {
+func Execute() {
 	flag.Parse()
 	engine := engine.New(*data_dir, *cache_size, *files_count)
 

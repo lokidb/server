@@ -14,7 +14,7 @@ RUN go mod verify
 COPY ./ ./
 
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /lokidb-server cmd/server/main.go
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /lokidb-server main.go
 
 # Use executables
 FROM gcr.io/distroless/base-debian11
