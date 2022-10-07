@@ -1,4 +1,4 @@
-package destributedstate
+package dstate
 
 import (
 	"testing"

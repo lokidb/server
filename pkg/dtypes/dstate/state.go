@@ -1,35 +1,35 @@
-package destributedstate
+package dstate
 
 import "time"
 
-type value struct {
-	lastUpdated time.Time
-	data        []byte
+type Value struct {
+	LastUpdated time.Time
+	Data        []byte
 }
 
 type state struct {
-	Items map[string]value
+	Items map[string]Value
 }
 
 func New() State {
 	s := new(state)
-	s.Items = make(map[string]value, 100)
+	s.Items = make(map[string]Value, 100)
 
 	return s
 }
 
 func (s *state) Merge(o State) State {
 	newState := new(state)
-	newState.Items = make(map[string]value, len(s.Items))
+	newState.Items = make(map[string]Value, len(s.Items))
 
 	for key, value := range s.Items {
 		newState.Items[key] = value
 	}
 
-	for key, value := range o.GetItems() {
+	for key, value := range *o.GetItems() {
 		currValue, ok := newState.Items[key]
 		if ok {
-			if value.lastUpdated.UnixNano() > currValue.lastUpdated.UnixNano() {
+			if value.LastUpdated.UnixNano() > currValue.LastUpdated.UnixNano() {
 				newState.Items[key] = value
 			}
 		} else {
@@ -41,11 +41,11 @@ func (s *state) Merge(o State) State {
 }
 
 func (s *state) Del(key string) {
-	s.Items[key] = value{lastUpdated: time.Now(), data: nil}
+	s.Items[key] = Value{LastUpdated: time.Now(), Data: nil}
 }
 
 func (s *state) Set(key string, data []byte) {
-	s.Items[key] = value{lastUpdated: time.Now(), data: data}
+	s.Items[key] = Value{LastUpdated: time.Now(), Data: data}
 }
 
 func (s *state) Get(key string) []byte {
@@ -54,9 +54,9 @@ func (s *state) Get(key string) []byte {
 		return nil
 	}
 
-	return value.data
+	return value.Data
 }
 
-func (s *state) GetItems() map[string]value {
-	return s.Items
+func (s *state) GetItems() *map[string]Value {
+	return &s.Items
 }

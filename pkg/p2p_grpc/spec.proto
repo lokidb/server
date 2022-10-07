@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+option go_package = "github.com/lokidb/server/pkg/p2p_grcp";
+package lokidb;
+
+import "google/protobuf/empty.proto";
+
+message Item {
+    int64 lastUpdated = 1;
+    bytes value = 2;
+}
+
+message StateResponse {
+    map<string, Item> state = 1;
+}
+
+message NewPeerRequest {
+    string host = 1;
+    int64 port = 2;
+}
+
+message NewPeerResponse {
+    bool added = 1;
+}
+
+service ConfigurationNodeService {
+    // Get peer state
+    rpc GetState(google.protobuf.Empty) returns (StateResponse) {}
+
+    // Add new peer to cluster
+    rpc NewPeer(NewPeerRequest) returns (NewPeerResponse) {}
+}
