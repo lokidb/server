@@ -5,6 +5,10 @@ import (
 )
 
 func equal(a []byte, b []byte) bool {
+	if a == nil && b == nil {
+		return true
+	}
+
 	if len(a) != len(b) {
 		return false
 	}
@@ -39,19 +43,25 @@ func TestMerge(t *testing.T) {
 	s2 := New()
 
 	s1.Set("a", []byte("A"))
+	s1.Set("c", []byte("C"))
 	s1.Set("a", []byte("B"))
 	s2.Set("a", []byte("A"))
 	s1.Set("b", []byte("B"))
 	s1.Del("a")
 	s2.Set("a", []byte("A"))
+	s2.Del("c")
 
-	s1.Merge(s2.getAol())
+	s3 := s1.Merge(s2)
 
-	if !equal(s1.Get("a"), []byte("A")) {
+	if !equal(s3.Get("a"), []byte("A")) {
 		t.Errorf("expecting 'a' value to be 'A'")
 	}
 
-	if !equal(s1.Get("b"), []byte("B")) {
+	if !equal(s3.Get("b"), []byte("B")) {
 		t.Errorf("expecting 'b' value to be 'B'")
+	}
+
+	if !equal(s3.Get("c"), nil) {
+		t.Errorf("expecting 'c' value to be nil")
 	}
 }
