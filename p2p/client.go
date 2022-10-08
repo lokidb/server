@@ -74,6 +74,11 @@ func (c *Client) NewPeer(host string, port int) error {
 }
 
 func getStateFromPeer(peer Address) (dstate.State, error) {
-	client := newClient(fmt.Sprintf("%s:%d", peer.Host, peer.Port), time.Second*2)
+	client := newClient(fmt.Sprintf("%s:%d", peer.Host, peer.Port), time.Second*1)
 	return client.getState()
+}
+
+func notifyNewPeer(peer Address, selfHost string, selfPort int) error {
+	client := newClient(fmt.Sprintf("%s:%d", peer.Host, peer.Port), time.Second*1)
+	return client.NewPeer(selfHost, selfPort)
 }

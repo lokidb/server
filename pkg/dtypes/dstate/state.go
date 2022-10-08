@@ -1,6 +1,9 @@
 package dstate
 
-import "time"
+import (
+	"sync"
+	"time"
+)
 
 type Value struct {
 	LastUpdated time.Time
@@ -9,6 +12,7 @@ type Value struct {
 
 type state struct {
 	Items map[string]Value
+	lock  sync.RWMutex
 }
 
 func New() State {
@@ -19,6 +23,9 @@ func New() State {
 }
 
 func (s *state) Merge(o State) State {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+
 	newState := new(state)
 	newState.Items = make(map[string]Value, len(s.Items))
 
@@ -41,14 +48,28 @@ func (s *state) Merge(o State) State {
 }
 
 func (s *state) Del(key string) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
 	s.Items[key] = Value{LastUpdated: time.Now(), Data: nil}
 }
 
 func (s *state) Set(key string, data []byte) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
 	s.Items[key] = Value{LastUpdated: time.Now(), Data: data}
 }
 
+func (s *state) SetDefault(key string, data []byte) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+	s.Items[key] = Value{LastUpdated: time.Unix(0, 0), Data: data}
+}
+
 func (s *state) Get(key string) []byte {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+
 	value, ok := s.Items[key]
 	if !ok {
 		return nil

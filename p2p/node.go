@@ -1,15 +1,17 @@
 package p2p
 
 import (
+	"context"
+	"fmt"
 	"math/rand"
+	"strconv"
 	"time"
 
 	"github.com/lokidb/server/pkg/dtypes/dstate"
 )
 
-const heartbeatRate = time.Second * 10
-const requestsPerBeat = 2
-const randomRetrys = 10
+const heartbeatRate = time.Second * 1
+const requestsPerBeat = 1
 
 type Node interface {
 	Start() error
@@ -26,39 +28,55 @@ type Address struct {
 }
 
 type node struct {
-	server Server
-	peers  []Address
-	state  dstate.State
-	done   chan bool
-	run    bool
+	server         Server
+	address        Address
+	bootstrapPeers []Address
+	state          dstate.State
+	cancelFunc     context.CancelFunc
 }
 
 func New(selfAddress Address, bootstrapAddress []Address) Node {
 	n := new(node)
 	n.state = dstate.New()
-	n.peers = bootstrapAddress
-	n.server = newNodeServer(selfAddress, &n.state)
-
-	n.run = true
-	n.done = make(chan bool, 1)
+	n.address = selfAddress
+	n.bootstrapPeers = bootstrapAddress
+	n.server = newNodeServer(selfAddress, n)
 
 	return n
 }
 
 func (n *node) Start() error {
-	if err := n.server.Start(); err != nil {
-		return err
+	go n.server.Start()
+
+	success := 0
+	for _, peer := range n.bootstrapPeers {
+		n.addPeerToState(peer, true)
+
+		if peer.Host == n.address.Host && peer.Port == n.address.Port {
+			continue
+		}
+
+		err := notifyNewPeer(peer, n.address.Host, n.address.Port)
+		if err == nil {
+			success += 1
+		}
 	}
 
-	go n.syncLoop()
+	// if success < 1 {
+	// 	return fmt.Errorf("did not notify peers about new peer")
+	// }
+
+	ctx, cancel := context.WithCancel(context.Background())
+	n.cancelFunc = cancel
+
+	go n.syncLoop(ctx)
 
 	return nil
 }
 
 func (n *node) Shutdown() {
 	n.server.Shutdown()
-	n.run = false
-	<-n.done
+	n.cancelFunc()
 }
 
 func (n *node) Get(key string) []byte {
@@ -73,42 +91,65 @@ func (n *node) Del(key string) {
 	n.state.Del(key)
 }
 
-func (n *node) syncLoop() {
-	defer close(n.done)
-
-	for n.run {
-		time.Sleep(heartbeatRate)
-
-		requested := make(map[int]struct{})
-		for r := 0; r < requestsPerBeat; r++ {
-			var randomPeerIndex int = -1
-
-			for i := 0; i < randomRetrys; i++ {
+func (n *node) syncLoop(ctx context.Context) {
+	ticker := time.NewTicker(heartbeatRate)
+	for {
+		select {
+		case <-ticker.C:
+			peers := n.peersFromState()
+			for r := 0; r < requestsPerBeat; r++ {
 				random := rand.Float64()
-				randomPeerIndex = int(random * float64(len(n.peers)))
+				randomPeerIndex := int(random * float64(len(peers)))
+				peer := peers[randomPeerIndex]
 
-				if _, ok := requested[randomPeerIndex]; !ok {
-					break
+				if peer.Host == n.address.Host && peer.Port == n.address.Port {
+					continue
 				}
 
-				randomPeerIndex = -1
+				peerState, err := getStateFromPeer(peer)
+				if err != nil {
+					continue
+				}
+
+				n.state = n.state.Merge(peerState)
 			}
 
-			if randomPeerIndex == -1 {
-				continue
-			}
+		case <-ctx.Done():
+			return
+		}
+	}
+}
 
-			peer := n.peers[randomPeerIndex]
-			requested[randomPeerIndex] = struct{}{}
+func (n *node) addPeerToState(peer Address, defualt bool) {
+	currentPeers := n.state.Get("peers")
+	updatedPeers := append(currentPeers, []byte(fmt.Sprintf("%s:%d,", peer.Host, peer.Port))...)
 
-			peerState, err := getStateFromPeer(peer)
-			if err != nil {
-				continue
-			}
+	if defualt {
+		n.state.SetDefault("peers", updatedPeers)
+	} else {
+		n.state.Set("peers", updatedPeers)
+	}
+}
 
-			n.state = n.state.Merge(peerState)
+func (n *node) peersFromState() []Address {
+	peersBytes := n.state.Get("peers")
+
+	peers := make([]Address, 0, 20)
+	host := ""
+	port := 0
+	buff := ""
+	for _, b := range peersBytes {
+		if b == byte(':') {
+			host = buff
+			buff = ""
+		} else if b == byte(',') {
+			port, _ = strconv.Atoi(buff)
+			buff = ""
+			peers = append(peers, Address{Host: host, Port: port})
+		} else {
+			buff += string(b)
 		}
 	}
 
-	n.done <- true
+	return peers
 }
