@@ -20,7 +20,7 @@ type server struct {
 	port       int
 }
 
-func NewServer(engine *engine.KeyValueStore, host string, port int) *server {
+func NewServer(host string, port int, engine *engine.KeyValueStore) *server {
 	grpcServer := grpc.NewServer()
 	s := new(server)
 	s.engine = *engine

@@ -48,7 +48,7 @@ func Execute() {
 	}
 
 	if *run_grpc {
-		grpcServer := grpc.NewServer(&engine, *grpc_host, *grpc_port)
+		grpcServer := grpc.NewServer(*grpc_host, *grpc_port, &engine)
 		wg.Add(1)
 		go func() {
 			grpcServer.Run()
