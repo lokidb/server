@@ -1,33 +1,38 @@
 # lokidb server
+
 LokiDB server
 
 ---
 
-### Table of Contents
+## Table of Contents
+
 - [lokidb server](#lokidb-server)
-    - [Table of Contents](#table-of-contents)
+  - [Table of Contents](#table-of-contents)
     - [Featurs](#featurs)
     - [Installation](#installation)
       - [Docker](#docker)
     - [Usage](#usage)
-        - [server](#server)
+      - [server](#server)
     - [API](#api)
 
-
 ### Featurs
+
 - gRPC support
 - REST support
 - slim docker image
 
-
 ### Installation
+
 #### Docker
+
 ```shell
 docker run -d -p 50051:50051 -p 8080:8080 --name lokidb yoyocode/lokidb
 ```
 
 ### Usage
-##### server
+
+#### server
+
 ```shell
 $ lokidb --help
 Usage of lokidb:
@@ -58,7 +63,8 @@ $ lokidb -storage_dir data/
 ```
 
 ### API  
+
 The system support REST API as well as a gRPC server.  
-REST: [OpenAPI schema](/rest/spec.yaml).  
-gRPC: [ProtoBuf schema](/grpc/spec.proto).  
+REST: [OpenAPI schema](/pkg/communication/rest/spec.yaml).  
+gRPC: [ProtoBuf schema](/pkg/communication/grpc/spec.proto).  
 The repo also contains an [insomnia workspace](https://insomnia.rest/) (a better looking postman) with all of the requests and enviroments.  
