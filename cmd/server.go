@@ -30,7 +30,7 @@ func Execute() {
 	engine := engine.New(*data_dir, *cache_size, *files_count)
 
 	if !(*run_grpc || *run_rest) {
-		fmt.Println("You must allow at least on of (REST, gRPC) to run.")
+		fmt.Println("You must allow at least one of (REST, gRPC) to run.")
 		os.Exit(1)
 		return
 	}
