@@ -1,8 +1,5 @@
 # lokidb server
-
-LokiDB server
-
----
+[![Bring Them Home](https://badge.yehoyada.com)](https://www.standwithus.com/)  
 
 ## Table of Contents
 
